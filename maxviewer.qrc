@@ -1,0 +1,15 @@
+<RCC>
+    <qresource prefix="/">
+        <file>qml/browsergrid.qml</file>
+        <file>qml/js/constants.js</file>
+        <file>qml/preview.qml</file>
+        <file>qml/viewer.qml</file>
+        <file>resources/images/icons/main_icon_128x128.png</file>
+        <file>qml/PopupItem.qml</file>
+        <file>qml/ProgressIndicator.qml</file>
+        <file>qml/DuplicateList.qml</file>
+    </qresource>
+    <qresource prefix="/qml">
+        <file>resources/images/checkbox_checked.png</file>
+    </qresource>
+</RCC>

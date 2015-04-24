@@ -49,6 +49,9 @@
 
 #define SETTINGS_KEY_SLIDE_SHOW_WRAPAROUND              SETTINGS_GROUP_UI"/slideShowWrap"
 
+#define SETTINGS_KEY_SLIDE_SORT_TYPE                    SETTINGS_GROUP_UI"/sortType"
+#define SETTINGS_KEY_SLIDE_SORT_ORDER                   SETTINGS_GROUP_UI"/sortOrder"
+
 
 // Supported Formats
 
@@ -62,7 +65,7 @@
 
 
 
-// Default Settings
+// Default Settings Values
 
 #define DEFAULT_THUMBS_WIDTH                            320
 
@@ -79,6 +82,12 @@
 
 #define DEFAULT_SLIDE_SHOW_DELAY_MIN                    1000
 #define DEFAULT_SLIDE_SHOW_DELAY_MAX                    10000
+
+
+#define DEFAULT_SORT_TYPE_NAME                          QDir::Name
+#define DEFAULT_SORT_TYPE_TYPE                          QDir::Type
+#define DEFAULT_SORT_TYPE_SIZE                          QDir::Size
+#define DEFAULT_SORT_TYPE_DATE                          QDir::Time
 
 
 enum SlideShowDirectionType

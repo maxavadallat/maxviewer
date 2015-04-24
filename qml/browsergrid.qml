@@ -19,11 +19,13 @@ Rectangle {
 
     property int popupPosY: 0
 
-    property int hoverIndex: -1
-
-    property int hoverIndexWhilePopupShown: -1
-
     property bool mouseOverPopup: false
+
+    property bool popupShown: false
+
+    property int hoverIndex: 0
+
+    property bool delegateHasPointer: false
 
     width: 400
     height: 300
@@ -199,6 +201,7 @@ Rectangle {
                 id: delegateMouseArea
                 anchors.fill: parent
                 hoverEnabled: true
+                acceptedButtons: Qt.LeftButton /*| Qt.RightButton*/
                 // On Clicked
                 onClicked: {
                     // Check Modifiers - SHIFT
@@ -230,15 +233,26 @@ Rectangle {
                             browserGrid.currentIndex = index;
                         }
                     }
+                }
 
-                    // Hide Popup
-                    //hidePopupMenu();
+                // On Contains Mouse Changed
+                onContainsMouseChanged: {
+                    //console.log("delegateMouseArea.onContainsMouseChanged - containsMouse: " + delegateMouseArea.containsMouse);
+
+                    // Check Contains Mouse
+                    if (delegateMouseArea.containsMouse && !browserGridRoot.popupShown) {
+                        // Set Hover Index
+                        browserGridRoot.hoverIndex = index;
+                    }
+
+                    // Set Delegate Has Pointer
+                    browserGridRoot.delegateHasPointer = delegateMouseArea.containsMouse;
                 }
 
                 // On Double Clicked
                 onDoubleClicked: {
                     // Check Selection Mode
-                    if (!browserGridRoot.selectionMode && !browserGridRoot.singleSelectionMode) {
+                    if (!browserGridRoot.selectionMode && !browserGridRoot.singleSelectionMode && mouse.button === Qt.LeftButton) {
                         // Set Current Index
                         browserGrid.currentIndex = index;
                         // Enable/Disable Grid
@@ -253,32 +267,11 @@ Rectangle {
                 // On Entered
                 onEntered: {
                     //console.log("delegateMouseArea.onEntered - index: " + index);
-
-                    // Check If Popup Shown
-                    if (popupMenu.opacity === 1.0) {
-                        // Set Hover Index While Popup Menu Shown
-                        browserGridRoot.hoverIndexWhilePopupShown = index;
-                    } else {
-                        // Set Hover Index
-                        browserGridRoot.hoverIndex = index;
-                    }
-
-                    // ...
                 }
 
                 // On Exited
                 onExited: {
                     //console.log("delegateMouseArea.onExited - index: " + index);
-
-                    // Check If Popup Shown
-                    if (popupMenu.opacity === 1.0) {
-                        // Set Hover Index While Popup Menu Shown
-                        browserGridRoot.hoverIndexWhilePopupShown = -1;
-                    } else {
-                        // Reset Hover Index
-                        browserGridRoot.hoverIndex = -1;
-                    }
-
                     // ...
                 }
 
@@ -294,7 +287,15 @@ Rectangle {
 
                 // On released
                 onReleased: {
-                    //console.log("delegateMouseArea.onReleased - index: " + index);
+                    //console.log("delegateMouseArea.onReleased - index: " + index + " - pos[" + mouse.x + ":" + mouse.y + "]");
+
+                    // Chekc Button
+                    if (mouse.button === Qt.RightButton) {
+                        // Set Popup Index
+                        mainViewController.popupIndex = index;
+                        // Show Popup Menu
+                        showPopupMenu();
+                    }
 
                     // ...
                 }
@@ -336,8 +337,6 @@ Rectangle {
         // On Current Index Chnged
         onCurrentIndexChanged: {
             //console.log("browserGrid.onCurrentIndexChanged - fileName: " + mainViewDataModel[browserGrid.currentIndex].fileName);
-            // Set Current File
-            //mainViewController.currentFile = mainViewDataModel.length > 0 ? mainViewController.currentDir + "/" + mainViewDataModel[browserGrid.currentIndex].fileName : "";
             // Set Current Index
             mainViewController.currentIndex = browserGrid.currentIndex;
         }
@@ -449,9 +448,8 @@ Rectangle {
                 title: "Rotate Left"
                 onItemClicked: {
                     //console.log("popupMenu.onItemClicked - " + title);
-
                     // Hide Popup Menu
-                    //hidePopupMenu();
+                    hidePopupMenu();
                     // Rotate Left
                     mainViewController.rotateLeft();
                 }
@@ -465,9 +463,8 @@ Rectangle {
                 title: "Rotate Right"
                 onItemClicked: {
                     //console.log("popupMenu.onItemClicked - " + title);
-
                     // Hide Popup Menu
-                    //hidePopupMenu();
+                    hidePopupMenu();
                     // Rotate Right
                     mainViewController.rotateRigth();
                 }
@@ -487,7 +484,7 @@ Rectangle {
                     //console.log("popupMenu.onItemClicked - " + title);
 
                     // Hide Popup Menu
-                    //hidePopupMenu();
+                    hidePopupMenu();
                     // Flip Horizontally
                     mainViewController.flipHorizontally();
                 }
@@ -503,7 +500,7 @@ Rectangle {
                     //console.log("popupMenu.onItemClicked - " + title);
 
                     // Hide Popup Menu
-                    //hidePopupMenu();
+                    hidePopupMenu();
                     // Flip Vertically
                     mainViewController.flipVertically();
                 }
@@ -523,7 +520,7 @@ Rectangle {
                     //console.log("popupMenu.onItemClicked - " + title);
 
                     // Hide Popup Menu
-                    //hidePopupMenu();
+                    hidePopupMenu();
                     // Copy To Directory
                     mainViewController.copyToDirectory();
                 }
@@ -539,7 +536,7 @@ Rectangle {
                     //console.log("popupMenu.onItemClicked - " + title);
 
                     // Hide Popup Menu
-                    //hidePopupMenu();
+                    hidePopupMenu();
                     // Move To Directory
                     mainViewController.moveToDirectory();
                 }
@@ -559,7 +556,7 @@ Rectangle {
                     //console.log("popupMenu.onItemClicked - " + title);
 
                     // Hide Popup Menu
-                    //hidePopupMenu();
+                    hidePopupMenu();
                     // Rename File
                     mainViewController.renameFile();
                 }
@@ -579,8 +576,7 @@ Rectangle {
                     //console.log("popupMenu.onItemClicked - " + title);
 
                     // Hide Popup Menu
-                    //hidePopupMenu();
-
+                    hidePopupMenu();
                     // Compare Images
                     mainViewController.compareImages();
                 }
@@ -601,7 +597,7 @@ Rectangle {
                     //console.log("popupMenu.onItemClicked - " + title);
 
                     // Hide Popup Menu
-                    //hidePopupMenu();
+                    hidePopupMenu();
                     // Delete File
                     mainViewController.deleteFile();
                 }
@@ -627,6 +623,13 @@ Rectangle {
     // On Destruction
     Component.onDestruction: {
         //console.log("browserGridRoot.onDestruction");
+
+        // ...
+    }
+
+    // On Hover Index Changed
+    onHoverIndexChanged: {
+        console.log("browserGridRoot.onHoverIndexChanged - hoverIndex: " + hoverIndex);
 
         // ...
     }
@@ -676,6 +679,9 @@ Rectangle {
             //console.log("browserGridRoot.showPopupMenu - popupIndex: " + mainViewController.popupIndex);
             // Set Opacity
             popupMenu.opacity = 1.0;
+
+            // Set Popup Shown
+            browserGridRoot.popupShown = true;
         }
     }
 
@@ -686,7 +692,13 @@ Rectangle {
             //console.log("browserGridRoot.hidePopupMenu");
             // Reset Opacity
             popupMenu.opacity = 0.0;
+
+            // Set Popup Shown
+            browserGridRoot.popupShown = false;
         }
+
+        // Reset Popup Index
+        //mainViewController.popupIndex = -1;
     }
 
     // On Up Pressed
@@ -827,13 +839,43 @@ Rectangle {
                 }
             }
 
+        } else {
             // Switch Key
             switch (event.key) {
                 default:
                 break;
-            }
-        } else {
 
+                case Qt.Key_PageUp: {
+                    console.log("browserGridRoot.Key.onReleased - PAGEUP");
+                    // Calculate Visible Rows Count
+                    var visibleRowCount = Math.floor(browserGrid.height / mainViewController.thumbsHeight);
+                    // Loop
+                    for (var i=0; i<visibleRowCount; i++) {
+                        // Move Index Up
+                        browserGrid.moveCurrentIndexUp();
+                    }
+
+                    // Position View
+                    browserGrid.positionViewAtIndex(browserGrid.currentIndex, GridView.Beginning);
+
+                } break;
+
+                case Qt.Key_PageDown: {
+                    console.log("browserGridRoot.Key.onReleased - PAGEDOWN");
+
+                    // Calculate Visible Rows Count
+                    var visibleRowCount = Math.floor(browserGrid.height / mainViewController.thumbsHeight);
+                    // Loop
+                    for (var i=0; i<visibleRowCount; i++) {
+                        // Move Index Down
+                        browserGrid.moveCurrentIndexDown();
+                    }
+
+                    // Position View
+                    browserGrid.positionViewAtIndex(browserGrid.currentIndex, GridView.End);
+
+                } break;
+            }
         }
 
         // ...
@@ -876,41 +918,64 @@ Rectangle {
 
                 // ...
             }
+        } else {
+
+            // Switch Key
+            switch (event.key) {
+                case Qt.Key_Home:
+                    console.log("browserGridRoot.Key.onReleased - HOME");
+                    // Set Current Index
+                    browserGrid.currentIndex = 0;
+                    // Position View
+                    browserGrid.positionViewAtBeginning();
+                break;
+
+                case Qt.Key_End:
+                    console.log("browserGridRoot.Key.onReleased - END");
+                    // Set Current Index
+                    browserGrid.currentIndex = browserGrid.count - 1;
+                    // Position View
+                    browserGrid.positionViewAtEnd();
+                break;
+
+                case Qt.Key_PageUp: {
+                    console.log("browserGridRoot.Key.onReleased - PAGEUP");
+                    // Calculate Visible Rows Count
+                    var visibleRowCount = Math.floor(browserGrid.height / mainViewController.thumbsHeight);
+                    // Loop
+                    for (var i=0; i<visibleRowCount; i++) {
+                        // Move Index Up
+                        browserGrid.moveCurrentIndexUp();
+                    }
+
+                    // Position View
+                    browserGrid.positionViewAtIndex(browserGrid.currentIndex, GridView.Beginning);
+
+                } break;
+
+                case Qt.Key_PageDown: {
+                    console.log("browserGridRoot.Key.onReleased - PAGEDOWN");
+
+                    // Calculate Visible Rows Count
+                    var visibleRowCount = Math.floor(browserGrid.height / mainViewController.thumbsHeight);
+                    // Loop
+                    for (var i=0; i<visibleRowCount; i++) {
+                        // Move Index Down
+                        browserGrid.moveCurrentIndexDown();
+                    }
+
+                    // Position View
+                    browserGrid.positionViewAtIndex(browserGrid.currentIndex, GridView.End);
+
+                } break;
+
+                default:
+                break;
+            }
+
         }
 
         // ...
-    }
-
-    // Selection Mode Changed
-    onSelectionModeChanged: {
-        //console.log("browserGridRoot.onSelectionModeChanged - selectionMode: " + browserGridRoot.selectionMode);
-
-        // ...
-    }
-
-    // Single Selection Mode Changed
-    onSingleSelectionModeChanged: {
-        //console.log("browserGridRoot.onSingleSelectionModeChanged - singleSelectionMode: " + browserGridRoot.singleSelectionMode);
-
-        // ...
-    }
-
-    // On Hover Index Changed
-    onHoverIndexChanged: {
-        //console.log("browserGridRoot.onHoverIndexChanged - hoverIndex: " + browserGridRoot.hoverIndex);
-
-    }
-
-    // On Hover Index Changed While Popup Shown
-    onHoverIndexWhilePopupShownChanged: {
-        //console.log("browserGridRoot.onHoverIndexWhilePopupShownChanged - hoverIndexWhilePopupShown: " + browserGridRoot.hoverIndexWhilePopupShown);
-
-    }
-
-    // On Mouse Over Popup Changed
-    onMouseOverPopupChanged: {
-        //console.log("browserGridRoot.onMouseOverPopupChanged - mouseOverPopup: " + browserGridRoot.mouseOverPopup);
-
     }
 
     // Connections
@@ -973,12 +1038,8 @@ Rectangle {
         onBrowserMousePressed: {
             //console.log("browserGridRoot.Connections.mainViewController.onBrowserMousePressed - pos:[" + aPosX + ":" + aPosY + "] - aButton: " + aButton);
 
-            //console.log("#### mp - hi: " + browserGridRoot.hoverIndex + " hvwps: " + browserGridRoot.hoverIndexWhilePopupShown + " b: " + aButton);
-
-            // Check Hover Index While Popup Was Shown
-            if (browserGridRoot.hoverIndexWhilePopupShown === -1 && popupMenu.opacity > 0.0 && !browserGridRoot.mouseOverPopup) {
-                // Reset Hover Index
-                browserGridRoot.hoverIndex = -1;
+            // Check If Over Popup
+            if (!browserGridRoot.mouseOverPopup) {
                 // Hide Popup Menu
                 hidePopupMenu();
             }
@@ -987,36 +1048,20 @@ Rectangle {
         // On Browser Mouse Released
         onBrowserMouseReleased: {
             //console.log("browserGridRoot.Connections.mainViewController.onBrowserMouseReleased - pos:[" + aPosX + ":" + aPosY + "] - aButton: " + aButton);
+            // Calculate Popup Pos X
+            browserGridRoot.popupPosX = Math.min(aPosX, browserGridRoot.width - popupMenu.width);
+            // Calculate Popup Pos Y
+            browserGridRoot.popupPosY = Math.min(aPosY, browserGridRoot.height - popupMenu.height);
 
-            //console.log("#### mr - hi: " + browserGridRoot.hoverIndex + " hvwps: " + browserGridRoot.hoverIndexWhilePopupShown + " b: " + aButton);
+            // Check Button
+            if (aButton === Qt.RightButton && browserGridRoot.delegateHasPointer && browserGridRoot.hoverIndex != -1) {
+                console.log("browserGridRoot.Connections.mainViewController.onBrowserMouseReleased - pos:[" + aPosX + ":" + aPosY + "] - aButton: " + aButton + " - hoverIndex: " + browserGridRoot.hoverIndex);
 
-            // ...
+                // Set Popup Index
+                mainViewController.popupIndex = browserGridRoot.hoverIndex;
 
-            // Check Focus & Button
-            if (browserGridRoot.hasFocus && aButton === Qt.RightButton) {
-                // Check Hover Index While Popup Was Shown
-                if (browserGridRoot.hoverIndexWhilePopupShown != -1) {
-                    // Set Hover Index
-                    browserGridRoot.hoverIndex = browserGridRoot.hoverIndexWhilePopupShown;
-                }
-
-                // Check Hover Index
-                if (browserGridRoot.hoverIndex != -1) {
-                    // Set Popup Index
-                    mainViewController.popupIndex = browserGridRoot.hoverIndex;
-
-                    // Calculate Popup Pos X
-                    browserGridRoot.popupPosX = Math.min(aPosX, browserGridRoot.width - popupMenu.width);
-                    // Calculate Popup Pos Y
-                    browserGridRoot.popupPosY = Math.min(aPosY, browserGridRoot.height - popupMenu.height);
-
-                    // Show Popup Menu
-                    showPopupMenu();
-                }
-
-            } else {
-                // Hide Popup Menu
-                hidePopupMenu();
+                // Show Popup
+                showPopupMenu();
             }
         }
     }

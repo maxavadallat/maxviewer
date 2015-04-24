@@ -5,6 +5,7 @@
 #include <QFileInfoList>
 #include <QQmlContext>
 #include <QMutexLocker>
+#include <QSettings>
 
 #include "mainbrowserwindow.h"
 #include "mainviewerwindow.h"
@@ -61,6 +62,7 @@ void MainBrowserWindow::release()
 MainBrowserWindow::MainBrowserWindow(QWidget* aParent)
     : QMainWindow(aParent)
     , ui(new Ui::MainBrowserWindow)
+    , sortingGroup(NULL)
     , fsModel(NULL)
     , currentIndex(-1)
     , popupIndex(-1)
@@ -72,6 +74,13 @@ MainBrowserWindow::MainBrowserWindow(QWidget* aParent)
     , infoDialog(NULL)
     , compareDialog(NULL)
     , dsrDialog(NULL)
+    , thumbsWidth(DEFAULT_THUMBS_WIDTH)
+    , thumbsHeight(DEFAULT_THUMBS_HEIGHT)
+    , slideShowDirection(0)
+    , slideShowDelay(DEFAULT_SLIDE_SHOW_DELAY)
+    , slideShowWrap(true)
+    , sortType(DEFAULT_SORT_TYPE_NAME)
+    , reverseOrder(false)
     , worker(NULL)
     , slideShowTimerID(-1)
     , duplicateListModel(NULL)
@@ -79,6 +88,17 @@ MainBrowserWindow::MainBrowserWindow(QWidget* aParent)
 {
     // Setup UI
     ui->setupUi(this);
+
+    // Create Action Group
+    sortingGroup = new QActionGroup(this);
+
+    // Add Sorting Actions
+    sortingGroup->addAction(ui->actionSort_by_Name);
+    sortingGroup->addAction(ui->actionSort_by_Type);
+    sortingGroup->addAction(ui->actionSort_by_Size);
+    sortingGroup->addAction(ui->actionSort_by_Date);
+    // Set Exclusive
+    sortingGroup->setExclusive(true);
 
     // Setup Tree View
     setupTreeView();
@@ -258,6 +278,45 @@ void MainBrowserWindow::restoreUI()
     setSlideShowWrap(settings.value(SETTINGS_KEY_SLIDE_SHOW_WRAPAROUND).toBool());
 
     // ...
+
+    // Get Sort Type
+    sortType = settings.value(SETTINGS_KEY_SLIDE_SORT_TYPE, DEFAULT_SORT_TYPE_NAME).toInt();
+
+    // Update Menu
+    updateMenu();
+
+    // ...
+}
+
+//==============================================================================
+// Update Menu
+//==============================================================================
+void MainBrowserWindow::updateMenu()
+{
+
+    // Switch Sorting Type
+    switch (sortType) {
+        default:
+        case DEFAULT_SORT_TYPE_NAME:
+            // Update Checked States
+            ui->actionSort_by_Name->setChecked(true);
+        break;
+
+        case DEFAULT_SORT_TYPE_TYPE:
+            // Update Checked States
+            ui->actionSort_by_Type->setChecked(true);
+        break;
+
+        case DEFAULT_SORT_TYPE_SIZE:
+            // Update Checked States
+            ui->actionSort_by_Size->setChecked(true);
+        break;
+
+        case DEFAULT_SORT_TYPE_DATE:
+            // Update Checked States
+            ui->actionSort_by_Date->setChecked(true);
+        break;
+    }
 }
 
 //==============================================================================
@@ -350,13 +409,16 @@ void MainBrowserWindow::setCurrentIndex(const int& aCurrentIndex)
 {
     // Check Current Index
     if (currentIndex != aCurrentIndex || currentIndex >= browserDataModel.count()) {
-        qDebug() << "MainBrowserWindow::setCurrentIndex - aCurrentIndex: " << aCurrentIndex;
+        //qDebug() << "MainBrowserWindow::setCurrentIndex - aCurrentIndex: " << aCurrentIndex;
 
         // Set Current Index
         currentIndex = qBound(0, aCurrentIndex, browserDataModel.count() - 1);
 
         // Emit Current Index Has Been Changed Signal
         emit currentIndexChanged(currentIndex);
+
+        // Set Popup Index
+        setPopupIndex(-1);
     }
 
     // Compose New Current File Name
@@ -381,12 +443,16 @@ void MainBrowserWindow::setPopupIndex(const int& aPopupIndex)
 {
     // Check Popup Index
     if (popupIndex != aPopupIndex) {
-        qDebug() << "MainBrowserWindow::setPopupIndex - aPopupIndex: " << aPopupIndex;
         // Set Popup Index
         popupIndex = aPopupIndex;
 
-        // Emit Popup Index Changed Signal
-        emit popupIndexChanged(popupIndex);
+        // Check Popup Index
+        if (popupIndex != -1) {
+            //qDebug() << "MainBrowserWindow::setPopupIndex - aPopupIndex: " << aPopupIndex;
+
+            // Emit Popup Index Changed Signal
+            emit popupIndexChanged(popupIndex);
+        }
     }
 }
 
@@ -463,6 +529,12 @@ void MainBrowserWindow::saveSettings()
     // Save Maximized State
     settings.setValue(SETTINGS_KEY_BROWSER_MAXIMIZED, browserMaximized);
 
+    // Save Sorting Type
+    settings.setValue(SETTINGS_KEY_SLIDE_SORT_TYPE, sortType);
+
+    // Save Reverse Order
+    settings.setValue(SETTINGS_KEY_SLIDE_SORT_ORDER, reverseOrder);
+
     // ...
 }
 
@@ -496,12 +568,26 @@ void MainBrowserWindow::updateBrowserModel()
     nameFilters << QString(DEFAULT_FILTER_TEMPLATE).arg(DEFAULT_SUPPORTED_FORMAT_GIF);
     nameFilters << QString(DEFAULT_FILTER_TEMPLATE).arg(DEFAULT_SUPPORTED_FORMAT_PNG);
 
-    // Check Settings For Sorting
+    // Init Settings
+    QSettings settings;
 
-    // ...
+    // Get Sort Type Settings
+    sortType = settings.value(SETTINGS_KEY_SLIDE_SORT_TYPE, DEFAULT_SORT_TYPE_NAME).toInt();
 
     // Init Sort Flags
-    QDir::SortFlag sortFlags = QDir::Name;
+    QDir::SortFlags sortFlags = (QDir::SortFlag)sortType;
+
+    // Get Reverse Order
+    reverseOrder = settings.value(SETTINGS_KEY_SLIDE_SORT_ORDER, false).toBool();
+
+    // Check Sort Type
+    if (sortType == DEFAULT_SORT_TYPE_DATE) {
+        // Adjust Sort Flags
+        sortFlags |= (reverseOrder ? (QDir::SortFlag)0 : QDir::Reversed);
+    } else {
+        // Adjust Sort Flags
+        sortFlags |= (reverseOrder ? QDir::Reversed : (QDir::SortFlag)0);
+    }
 
     // Get File Info List
     QFileInfoList fileInfoList = currentDirEngine.entryInfoList(nameFilters, filters, sortFlags);
@@ -844,6 +930,8 @@ void MainBrowserWindow::doRotateLeft()
 
             // Set Index
             index = popupIndex;
+            // Reset Popup Index
+            popupIndex = -1;
 
         } else {
             qDebug() << "MainBrowserWindow::doRotateLeft - currentIndex: " << currentIndex;
@@ -894,6 +982,8 @@ void MainBrowserWindow::doRotateRigth()
 
             // Set Index
             index = popupIndex;
+            // Reset Popup Index
+            popupIndex = -1;
 
         } else {
             qDebug() << "MainBrowserWindow::doRotateRigth - currentIndex: " << currentIndex;
@@ -944,6 +1034,8 @@ void MainBrowserWindow::doFlipHorizontally()
 
             // Set Index
             index = popupIndex;
+            // Reset Popup Index
+            popupIndex = -1;
 
         } else {
             qDebug() << "MainBrowserWindow::doFlipHorizontally - currentIndex: " << currentIndex;
@@ -994,6 +1086,8 @@ void MainBrowserWindow::doFlipVertically()
 
             // Set Index
             index = popupIndex;
+            // Reset Popup Index
+            popupIndex = -1;
 
         } else {
             qDebug() << "MainBrowserWindow::doFlipVertically - currentIndex: " << currentIndex;
@@ -1045,13 +1139,7 @@ void MainBrowserWindow::doDeleteFile()
             // Populate Browser Data Model
             populateBrowserModel(lastIndex);
         }
-/*
-        // Check Last Index
-        if (lastIndex != -1) {
-            // Set Current Index
-            setCurrentIndex(lastIndex);
-        }
-*/
+
         // Get Deleted Items Count
         while (deletedItems.count() > 0) {
             // Get Last Item
@@ -1070,6 +1158,8 @@ void MainBrowserWindow::doDeleteFile()
 
             // Set Index
             index = popupIndex;
+            // Reset Popup Index
+            popupIndex = -1;
 
         } else {
             qDebug() << "MainBrowserWindow::doDeleteFile - currentIndex: " << currentIndex;
@@ -1150,6 +1240,8 @@ void MainBrowserWindow::doRenameFile()
 
             // Set Index
             index = popupIndex;
+            // Reset Popup Index
+            popupIndex = -1;
 
         } else {
             qDebug() << "MainBrowserWindow::doRenameFile - currentIndex: " << currentIndex;
@@ -1205,6 +1297,8 @@ void MainBrowserWindow::doCopyToDirectory()
 
                 // Set Index
                 index = popupIndex;
+                // Reset Popup Index
+                popupIndex = -1;
 
             } else {
                 qDebug() << "MainBrowserWindow::doCopyToDirectory - currentIndex: " << currentIndex;
@@ -1292,6 +1386,8 @@ void MainBrowserWindow::doMoveToDirectory()
 
                 // Set Index
                 index = popupIndex;
+                // Reset Popup Index
+                popupIndex = -1;
 
             } else {
                 qDebug() << "MainBrowserWindow::doMoveToDirectory - currentIndex: " << currentIndex;
@@ -1521,6 +1617,8 @@ void MainBrowserWindow::compareImages()
             titleRight = item->fileName;
             // Set Right Image
             rightImage = currentDir + QString("/") + item->fileName;
+            // Reset Popup Index
+            popupIndex = -1;
         }
     }
 
@@ -1613,6 +1711,45 @@ void MainBrowserWindow::refreshView(const int& aIndex)
 }
 
 //==============================================================================
+// Set Sorting Type
+//==============================================================================
+void MainBrowserWindow::setSortType(const int& aSortType)
+{
+    qDebug() << "MainBrowserWindow::setSortType - aSortType: " << aSortType;
+
+    // Check Sort Type
+    if (sortType != aSortType) {
+        // Init Settings
+        QSettings settings;
+        // Set Value
+        settings.setValue(SETTINGS_KEY_SLIDE_SORT_TYPE, aSortType);
+        // Set Value
+        settings.setValue(SETTINGS_KEY_SLIDE_SORT_ORDER, false);
+        // Refresh View
+        refreshView();
+    }
+}
+
+//==============================================================================
+// Set Sort Reverse Order
+//==============================================================================
+void MainBrowserWindow::setReverseOrder(const bool& aReverse)
+{
+    qDebug() << "MainBrowserWindow::setReverseOrder - aReverse: " << aReverse;
+
+    // Check Reverse Order
+    if (reverseOrder != aReverse) {
+        // Init Settings
+        QSettings settings;
+        // Set Value
+        settings.setValue(SETTINGS_KEY_SLIDE_SORT_ORDER, aReverse);
+        // Refresh View
+        refreshView();
+    }
+
+}
+
+//==============================================================================
 // Delete File By Index
 //==============================================================================
 void MainBrowserWindow::deleteFileByIndex(const int& aIndex, const bool& aDeleteItem, const bool& aNotify)
@@ -1628,11 +1765,14 @@ void MainBrowserWindow::deleteFileByIndex(const int& aIndex, const bool& aDelete
         // Init File Info
         QFileInfo fileInfo(fileName);
 
-        // Check File Info
+        // Check File Info - Check Settings
         if (fileInfo.exists()) {
+
+            qDebug() << "MainBrowserWindow::deleteFileByIndex - aIndex: " << aIndex;
 
             // Init Dir
             QDir dir(fileInfo.canonicalPath());
+
             // Delete File
             if (!dir.remove(fileName)) {
                 qDebug() << "MainBrowserWindow::deleteFileByIndex - aIndex: " << fileName << " - ERROR!";
@@ -1769,10 +1909,14 @@ void MainBrowserWindow::copyFileByIndex(const int& aIndex, const QString& aTarge
         QFile file(fileName);
         // Init Target File
         QFile targetFile(targetFileName);
+
         // Check Target File - TODO: Check Settings
+
+        // Check If Target File Exists
         if (targetFile.exists()) {
             //qDebug("MainBrowserWindow::copyFileByIndex - Overwriting...");
 
+            // Show Image Compare Dialog - Check Settings
 
             // Delete Target File
             if (!targetFile.remove()) {
@@ -1819,6 +1963,8 @@ void MainBrowserWindow::moveFileByIndex(const int& aIndex, const QString& aTarge
         // Check Target File - TODO: Check Settings
         if (targetFile.exists()) {
             qDebug("MainBrowserWindow::moveFileByIndex - Overwriting...");
+
+            // Show Image Compare Dialog - Check Settings
 
             // Delete Target File
             if (!targetFile.remove()) {
@@ -1897,9 +2043,12 @@ void MainBrowserWindow::renameFileByIndex(const int& aIndex, const QString& aFil
         QFile file(fileName);
         // Init Target File
         QFile targetFile(targetFileName);
+
         // Check Target File - TODO: Check Settings
         if (targetFile.exists()) {
             qDebug("MainBrowserWindow::renameFileByIndex - Overwriting...");
+
+            // Show Image Compare Dialog - Check Settings
 
             // Delete Target File
             if (!targetFile.remove()) {
@@ -3055,6 +3204,54 @@ void MainBrowserWindow::on_actionFind_Duplicates_triggered()
 }
 
 //==============================================================================
+// Action Sort by Name Triggered Slot
+//==============================================================================
+void MainBrowserWindow::on_actionSort_by_Name_triggered()
+{
+    // Set Sort Type
+    setSortType(DEFAULT_SORT_TYPE_NAME);
+
+    // Update Menu
+    updateMenu();
+}
+
+//==============================================================================
+// Action Sort by Type Triggered Slot
+//==============================================================================
+void MainBrowserWindow::on_actionSort_by_Type_triggered()
+{
+    // Set Sort Type
+    setSortType(DEFAULT_SORT_TYPE_TYPE);
+}
+
+//==============================================================================
+// Action Sort by Size Triggered Slot
+//==============================================================================
+void MainBrowserWindow::on_actionSort_by_Size_triggered()
+{
+    // Set Sort Type
+    setSortType(DEFAULT_SORT_TYPE_SIZE);
+}
+
+//==============================================================================
+// Action Sort by Date Triggered Slot
+//==============================================================================
+void MainBrowserWindow::on_actionSort_by_Date_triggered()
+{
+    // Set Sort Type
+    setSortType(DEFAULT_SORT_TYPE_DATE);
+}
+
+//==============================================================================
+// Action Reverse Sort Order Triggered Slot
+//==============================================================================
+void MainBrowserWindow::on_actionReverse_triggered()
+{
+    // Set Sort Reverse Order
+    setReverseOrder(ui->actionReverse->isChecked());
+}
+
+//==============================================================================
 // Action Quit Triggered
 //==============================================================================
 void MainBrowserWindow::on_actionQuit_triggered()
@@ -3138,6 +3335,10 @@ MainBrowserWindow::~MainBrowserWindow()
 
     // Delete UI
     delete ui;
+
+    // Delete Sorting Group
+    delete sortingGroup;
+
     // Reset File System Model
     fsModel = NULL;
 
@@ -3191,5 +3392,4 @@ MainBrowserWindow::~MainBrowserWindow()
 
     qDebug() << "MainBrowserWindow::~MainBrowserWindow";
 }
-
 

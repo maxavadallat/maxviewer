@@ -9,6 +9,7 @@
 #include <QThread>
 #include <QTimerEvent>
 #include <QMultiMap>
+#include <QActionGroup>
 
 #include "constants.h"
 
@@ -210,6 +211,12 @@ public slots:
     // Refresh View
     void refreshView(const int& aIndex = -1);
 
+    // Set Sorting Type
+    void setSortType(const int& aSortType);
+
+    // Set Sort Reverse Order
+    void setReverseOrder(const bool& aReverse);
+
 signals:
 
     // Current Dir Changed Signal
@@ -331,10 +338,20 @@ private slots:
     void on_actionCompare_Images_triggered();
     // Action Refresh Triggered Slot
     void on_actionRefresh_triggered();
-    // Action Quit Triggered Slot
-    void on_actionQuit_triggered();
     // Action Find Duplicates Slot
     void on_actionFind_Duplicates_triggered();
+    // Action Sort by Name Triggered Slot
+    void on_actionSort_by_Name_triggered();
+    // Action Sort by Type Triggered Slot
+    void on_actionSort_by_Type_triggered();
+    // Action Sort by Size Triggered Slot
+    void on_actionSort_by_Size_triggered();
+    // Action Sort by Date Triggered Slot
+    void on_actionSort_by_Date_triggered();
+    // Action Quit Triggered Slot
+    void on_actionQuit_triggered();
+
+    void on_actionReverse_triggered();
 
 protected:
 
@@ -353,6 +370,8 @@ private:
 
     // Restore UI
     void restoreUI();
+    // Update Menu
+    void updateMenu();
 
     // Init Worker
     void initWorker();
@@ -408,6 +427,8 @@ private:
 
     // UI
     Ui::MainBrowserWindow*          ui;
+    // Sorting Action Group
+    QActionGroup*                   sortingGroup;
     // File System Model
     QFileSystemModel*               fsModel;
 
@@ -452,6 +473,11 @@ private:
     int                             slideShowDelay;
     // Slide Show Wrap Aroound
     bool                            slideShowWrap;
+
+    // Sort Type
+    int                             sortType;
+    // Reverse Order
+    bool                            reverseOrder;
 
     // Selected Transfer Dir
     QString                         transferDir;

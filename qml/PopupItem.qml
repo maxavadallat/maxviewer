@@ -73,7 +73,6 @@ Rectangle {
         // On Entered
         onEntered: {
             // Set Color
-            //popupItemRoot.color = Const.defaultHighlightColorFocused;
             // Check Title
             if (popupItemRoot.title !== "-") {
                 // Set Mouse Hovered
@@ -84,7 +83,6 @@ Rectangle {
         // On Exited
         onExited: {
             // Reset Color
-            //popupItemRoot.color = "transparent";
             // Reset Mouse Hovered
             mouseHovered = false;
         }

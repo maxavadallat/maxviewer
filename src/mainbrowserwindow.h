@@ -350,7 +350,7 @@ private slots:
     void on_actionSort_by_Date_triggered();
     // Action Quit Triggered Slot
     void on_actionQuit_triggered();
-
+    // Action Reverse Triggered Slot
     void on_actionReverse_triggered();
 
 protected:
@@ -413,7 +413,7 @@ private:
     void flipFileByIndex(const int& aIndex, int aDirection = FDTHorizontal, const bool& aNotify = true);
 
     // Copy File By Index
-    void copyFileByIndex(const int& aIndex, const QString& aTargetDir, const bool& aNotify = true);
+    bool copyFileByIndex(const int& aIndex, const QString& aTargetDir, const bool& aNotify = true);
     // Move File By Index
     void moveFileByIndex(const int& aIndex, const QString& aTargetDir, const bool& aDeleteItem = true, const bool& aNotify = true);
 
@@ -496,6 +496,9 @@ private:
 
     // Delete Selected Files Only, No Current File Deletion
     bool                            deleteSelectedOnly;
+
+    // Transfer Options
+    int                             transferOptions;
 };
 
 #endif // MAINBROWSERWINDOW_H

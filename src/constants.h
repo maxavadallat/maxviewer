@@ -129,5 +129,9 @@ enum RotationDirectionType
 #define DUPLICATE_FILE_LIST_ITEM_SELECTED_SUFFIX        " *"
 
 
+#define DEFAULT_TRANSFER_OPTIONS_YES_TO_ALL             0x0001
+#define DEFAULT_TRANSFER_OPTIONS_NO_TO_ALL              0x0010
+
+
 #endif // CONSTANTS_H
 

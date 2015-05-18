@@ -85,6 +85,7 @@ MainBrowserWindow::MainBrowserWindow(QWidget* aParent)
     , slideShowTimerID(-1)
     , duplicateListModel(NULL)
     , deleteSelectedOnly(false)
+    , transferOptions(0)
 {
     // Setup UI
     ui->setupUi(this);
@@ -839,7 +840,13 @@ void MainBrowserWindow::copyToDirectory()
     if (!compareDialog) {
         // Create Compare Dialog
         compareDialog = new CompareDialog();
+
+        // ...
+
     }
+
+    // Configure Buttons
+    compareDialog->configureButtons(QDialogButtonBox::Yes | QDialogButtonBox::YesToAll | QDialogButtonBox::No | QDialogButtonBox::NoToAll | QDialogButtonBox::Abort);
 
     // Check Dir Selector
     if (dirSelector) {
@@ -869,6 +876,18 @@ void MainBrowserWindow::moveToDirectory()
         // Create Dir Selector
         dirSelector = new DirSelectorDialog();
     }
+
+    // Check Comapre Images Dialog
+    if (!compareDialog) {
+        // Create Compare Dialog
+        compareDialog = new CompareDialog();
+
+        // ...
+
+    }
+
+    // Configure Buttons
+    compareDialog->configureButtons(QDialogButtonBox::Yes | QDialogButtonBox::YesToAll | QDialogButtonBox::No | QDialogButtonBox::NoToAll | QDialogButtonBox::Abort);
 
     // Check Dir Selector
     if (dirSelector) {
@@ -1261,6 +1280,9 @@ void MainBrowserWindow::doCopyToDirectory()
     if (dirSelector && dirSelector->getSelectedDir() != currentDir) {
         qDebug() << "MainBrowserWindow::doCopyToDirectory - selectedDir: " << dirSelector->getSelectedDir();
 
+        // Reset Transfer Options
+        transferOptions = 0;
+
         // Check If Browser Grid Has Selections
         if (hasSelection()) {
             // Get Browser Data Model Count
@@ -1321,6 +1343,9 @@ void MainBrowserWindow::doMoveToDirectory()
     // Check Dir Selector & Selected Dir
     if (dirSelector && dirSelector->getSelectedDir() != currentDir) {
         qDebug() << "MainBrowserWindow::doMoveToDirectory - selectedDir: " << dirSelector->getSelectedDir();
+
+        // Reset Transfer Options
+        transferOptions = 0;
 
         // Check If Browser Grid Has Selections
         if (hasSelection()) {
@@ -1886,7 +1911,7 @@ void MainBrowserWindow::flipFileByIndex(const int& aIndex, int aDirection, const
 //==============================================================================
 // Copy File By Index
 //==============================================================================
-void MainBrowserWindow::copyFileByIndex(const int& aIndex, const QString& aTargetDir, const bool& aNotify)
+bool MainBrowserWindow::copyFileByIndex(const int& aIndex, const QString& aTargetDir, const bool& aNotify)
 {
     Q_UNUSED(aNotify);
 
@@ -1895,8 +1920,8 @@ void MainBrowserWindow::copyFileByIndex(const int& aIndex, const QString& aTarge
 
     // Check Index
     if (aIndex >=0 && aIndex < bdmCount) {
-        // Init File Name
-        QString fileName = currentDir + QString("/") + static_cast<BrowserDataObject*>(browserDataModel[aIndex])->fileName;
+        // Init Source File Name
+        QString sourceFileName = currentDir + QString("/") + static_cast<BrowserDataObject*>(browserDataModel[aIndex])->fileName;
 
         // Init Target File Name
         QString targetFileName(aTargetDir);
@@ -1906,7 +1931,7 @@ void MainBrowserWindow::copyFileByIndex(const int& aIndex, const QString& aTarge
         targetFileName += static_cast<BrowserDataObject*>(browserDataModel[aIndex])->fileName;
 
         // Init Current File
-        QFile file(fileName);
+        QFile file(sourceFileName);
         // Init Target File
         QFile targetFile(targetFileName);
 
@@ -1916,21 +1941,92 @@ void MainBrowserWindow::copyFileByIndex(const int& aIndex, const QString& aTarge
         if (targetFile.exists()) {
             //qDebug("MainBrowserWindow::copyFileByIndex - Overwriting...");
 
-            // Show Image Compare Dialog - Check Settings
+            // Check Transfer Options - No To All
+            if (transferOptions & DEFAULT_TRANSFER_OPTIONS_NO_TO_ALL) {
+                return false;
+            }
+
+            // Check Transfer Options - Yes To All
+            if (!(transferOptions & DEFAULT_TRANSFER_OPTIONS_YES_TO_ALL)) {
+
+                // Check Compare Dialog
+                if (!compareDialog) {
+
+                    // Create Compare Dialog
+                    //compareDialog = new CompareDialog();
+
+                    qWarning() << "MainBrowserWindow::copyFileByIndex - NO COMPARE DIALOG!!";
+
+                    return false;
+                }
+
+                // Set Current Dir
+                compareDialog->setCurrentDir(currentDir);
+
+                // Set Left Image File
+                compareDialog->setLeftImage(sourceFileName);
+                // Set Right Image File
+                compareDialog->setRightImage(targetFileName);
+
+                // Set Window Title
+                //compareDialog->setWindowTitle(QString("Compare Images: %1 <-> %2").arg(titleLeft).arg(titleRight));
+                compareDialog->setWindowTitle(QString("Target File Exists: %1. Overwrite?").arg(targetFileName));
+
+                // ...
+
+                // Configure Buttons
+//                compareDialog->configureButtons(QDialogButtonBox::Yes | QDialogButtonBox::YesToAll | QDialogButtonBox::No | QDialogButtonBox::NoToAll | QDialogButtonBox::Abort);
+
+                // Exec
+                compareDialog->exec();
+
+                // Check Action Index
+                switch (compareDialog->actionIndex) {
+                    case 1:
+                        // Yes To All
+
+                        // Set Transfer Options
+                        transferOptions |= DEFAULT_TRANSFER_OPTIONS_YES_TO_ALL;
+
+                    case 0:
+                        // Yes
+
+                    break;
+
+                    case 3:
+                        // No To All
+
+                        // Set Transfer Options
+                        transferOptions |= DEFAULT_TRANSFER_OPTIONS_NO_TO_ALL;
+
+                    case 2:
+                    default:
+
+                        // No
+                        return false;
+                    break;
+                }
+            }
 
             // Delete Target File
             if (!targetFile.remove()) {
                 qDebug("MainBrowserWindow::copyFileByIndex - ERROR CLEARING TARGET FILE!");
 
-                return;
+                return false;
             }
         }
 
         // Copy File(s)
         if (!file.copy(targetFileName)) {
             qDebug("MainBrowserWindow::copyFileByIndex - ERROR COPY FILE!");
+
+            return false;
         }
+
+        return true;
     }
+
+    return false;
 }
 
 //==============================================================================
@@ -1940,79 +2036,57 @@ void MainBrowserWindow::moveFileByIndex(const int& aIndex, const QString& aTarge
 {
     Q_UNUSED(aNotify);
 
-    // Get Model Count
-    int bdmCount = browserDataModel.count();
-
-    // Check Index
-    if (aIndex >=0 && aIndex < bdmCount) {
+    // Copy File by Index
+    if (copyFileByIndex(aIndex, aTargetDir, aNotify)) {
         // Init File Name
-        QString fileName = currentDir + QString("/") + static_cast<BrowserDataObject*>(browserDataModel[aIndex])->fileName;
+        QString sourceFileName = currentDir + QString("/") + static_cast<BrowserDataObject*>(browserDataModel[aIndex])->fileName;
+        // Init Source File
+        QFile sourceFile(sourceFileName);
+        // Remove
+        if (!sourceFile.remove()) {
+            qDebug("MainBrowserWindow::moveFileByIndex - ERROR REMOVING SOURCE FILE!");
 
-        // Init Target File Name
-        QString targetFileName(aTargetDir);
-        // Add Separator
-        targetFileName += "/";
-        // Add Current File Name
-        targetFileName += static_cast<BrowserDataObject*>(browserDataModel[aIndex])->fileName;
-
-        // Init Current File
-        QFile file(fileName);
-        // Init Target File
-        QFile targetFile(targetFileName);
-
-        // Check Target File - TODO: Check Settings
-        if (targetFile.exists()) {
-            qDebug("MainBrowserWindow::moveFileByIndex - Overwriting...");
-
-            // Show Image Compare Dialog - Check Settings
-
-            // Delete Target File
-            if (!targetFile.remove()) {
-                qDebug("MainBrowserWindow::moveFileByIndex - ERROR CLEARING TARGET FILE!");
-
-                return;
-            }
+            return;
         }
+    } else {
+        //qDebug("MainBrowserWindow::moveFileByIndex - ERROR COPY SOURCE FILE!");
 
-        // Rename/Move File(s)
-        if (!file.rename(targetFileName)) {
-            qDebug("MainBrowserWindow::moveFileByIndex - ERROR COPY FILE!");
-        }
+        return;
+    }
 
-        // Get Item
-        BrowserDataObject* item = static_cast<BrowserDataObject*>(browserDataModel.takeAt(aIndex));
+    // Get Item
+    BrowserDataObject* item = static_cast<BrowserDataObject*>(browserDataModel.takeAt(aIndex));
 
-        // Check Notify
-        if (aNotify) {
-            // Emit Deleting Index Signal
-            emit deletingIndex(aIndex);
+    // Check Notify
+    if (aNotify) {
+        // Emit Deleting Index Signal
+        emit deletingIndex(aIndex);
 
-            // Check Worker
-            if (worker) {
-                // Emit Populate Browser Data Model
-                emit worker->populateBrowserModel(aIndex);
-            } else {
-                // Populate Browser Data Model
-                populateBrowserModel(aIndex);
-            }
-
-            // Emit Index Removed Signal
-            emit indexDeleted(aIndex);
-
-            // Set Current Index
-            //setCurrentIndex(aIndex);
-        }
-
-        if (aDeleteItem) {
-            // Delte Item - Have to do it last
-            //delete item;
-            item->deleteLater();
+        // Check Worker
+        if (worker) {
+            // Emit Populate Browser Data Model
+            emit worker->populateBrowserModel(aIndex);
         } else {
-            // Append To Deleted Items
-            deletedItems << item;
-
-            qDebug() << "MainBrowserWindow::moveFileByIndex - added deleted item";
+            // Populate Browser Data Model
+            populateBrowserModel(aIndex);
         }
+
+        // Emit Index Removed Signal
+        emit indexDeleted(aIndex);
+
+        // Set Current Index
+        //setCurrentIndex(aIndex);
+    }
+
+    if (aDeleteItem) {
+        // Delte Item - Have to do it last
+        //delete item;
+        item->deleteLater();
+    } else {
+        // Append To Deleted Items
+        deletedItems << item;
+
+        qDebug() << "MainBrowserWindow::moveFileByIndex - added deleted item";
     }
 }
 

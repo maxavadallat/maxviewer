@@ -17,6 +17,8 @@ CompareDialog::CompareDialog(QWidget* aParent)
     connect(ui->leftImageFrame, SIGNAL(imageUpdated()), this, SLOT(leftImageChanged()));
     connect(ui->rightImageFrame, SIGNAL(imageUpdated()), this, SLOT(rightImageChanged()));
 
+    connect(ui->buttonBox, SIGNAL(clicked(QAbstractButton*)), this, SLOT(buttonBoxButtonClicked(QAbstractButton*)));
+
     // ...
 }
 
@@ -29,7 +31,15 @@ void CompareDialog::configureButtons(QDialogButtonBox::StandardButtons aButtons)
 
     // Set Standard Buttons
     ui->buttonBox->setStandardButtons(aButtons);
+}
 
+//==============================================================================
+// Add Button
+//==============================================================================
+void CompareDialog::addButton(const QString& aButton)
+{
+    // Add Button
+    ui->buttonBox->addButton(aButton, QDialogButtonBox::AcceptRole);
 }
 
 //==============================================================================
@@ -86,6 +96,29 @@ void CompareDialog::rightImageChanged()
 
     // Load Image To Center Frame
     ui->centerFrame->setRightImage(ui->rightImageFrame->getFileName());
+}
+
+//==============================================================================
+// Button Box Button Clicked
+//==============================================================================
+void CompareDialog::buttonBoxButtonClicked(QAbstractButton* aButton)
+{
+    // Reset Action Index
+    actionIndex = -1;
+
+    // Get Standard Button
+    QDialogButtonBox::StandardButton button = ui->buttonBox->standardButton(aButton);
+
+    // Switch Standard Button
+    switch (button) {
+        case QDialogButtonBox::Yes:         actionIndex = 0; return;
+        case QDialogButtonBox::YesToAll:    actionIndex = 1; return;
+        case QDialogButtonBox::No:          actionIndex = 2; return;
+        case QDialogButtonBox::NoToAll:     actionIndex = 3; return;
+
+        default:
+        break;
+    }
 }
 
 //==============================================================================

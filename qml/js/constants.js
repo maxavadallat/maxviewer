@@ -10,7 +10,7 @@ var defaultFontColor                    = "#FFFFFFFF";
 
 var defaultFontShadowColor              = "#FF000000";
 
-var defaultHighlightSpeed               = 50;
+var defaultHighlightSpeed               = 100;
 
 var defaultThumbWidth                   = 320;
 var defaultThumbHeight                  = 200;

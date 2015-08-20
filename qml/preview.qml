@@ -23,12 +23,7 @@ Rectangle {
         cache: false
         visible: opacity > 0.0
         opacity: previewImage.status === Image.Ready ? 1.0 : 0.0
-        Behavior on opacity {
-            NumberAnimation {
-                duration: 200
-            }
-        }
-
+        Behavior on opacity { NumberAnimation { duration: 200 } }
         // Preview Image Source
         source: "file://" + mainViewController.currentFile
 
@@ -43,12 +38,14 @@ Rectangle {
                 // Set Source
                 previewImage.source = "file://" + mainViewController.currentFile;
                 // Reset File Info
-                previewRoot.fileInfo = "";
+                //previewRoot.fileInfo = "";
 
             // Check Status
-            } else if (previewImage.status === Image.Ready) {
+            } else if (previewImage.status === Image.Ready && previewImage.frameCount > 1) {
                 // Set File Info
-                previewRoot.fileInfo = previewImage.sourceSize.width + "x" + previewImage.sourceSize.height + " size: " + mainViewController.getFileSize(mainViewController.currentFile);
+                //previewRoot.fileInfo = previewImage.sourceSize.width + "x" + previewImage.sourceSize.height + " size: " + mainViewController.getFileSize(mainViewController.currentFile);
+                // Start Playing
+                previewImage.playing = true;
             }
         }
     }
@@ -63,11 +60,7 @@ Rectangle {
         color: Const.defaultFontColor
         visible: opacity > 0.0
         opacity: previewImage.status !== Image.Ready ? 1.0 : 0.0
-        Behavior on opacity {
-            NumberAnimation {
-                duration: 200
-            }
-        }
+        Behavior on opacity { NumberAnimation { duration: 200 } }
 
         text: mainViewController.currentFile.length > 1 ? previewImage.status === Image.Error ? "Error." : "Loading..." : ""
     }
@@ -129,7 +122,7 @@ Rectangle {
             // Set Update Flag
             previewRoot.updateFlag = true;
             // Reset Preview Image
-            previewImage.source = "";
+            //previewImage.source = "";
         }
 
         // On File Updated
@@ -140,7 +133,7 @@ Rectangle {
                 // Set Update Flag
                 previewRoot.updateFlag = true;
                 // Reset Preview Image
-                previewImage.source = "";
+                //previewImage.source = "";
             }
         }
 

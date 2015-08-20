@@ -9,8 +9,9 @@ Rectangle {
     width: 600
     height: 400
 
-    //color: Const.defaultBackgroundColor
     color: Const.defaultViewBackgroundColor
+
+    focus: true
 
 /*
     // Viewer Grid Container
@@ -74,101 +75,40 @@ Rectangle {
         }
     }
 */
+
     // Connections
     Connections {
         target: mainViewController
-        // On Current Index Changed
-        onCurrentIndexChanged: {
-            //console.log("viewerRoot.Connections.mainViewController.onCurrentIndexChanged - currentIndex: " + mainViewController.currentIndex);
-
-            // Set Viewer Grid Current Index
-            //viewGrid.currentIndex = mainViewController.currentIndex;
-            // Position View At Index
-            //viewGrid.positionViewAtIndex(viewGrid.currentIndex, GridView.Contain);
-
-            // ...
-        }
 
         // On Current File Changed
         onCurrentFileChanged: {
             //console.log("viewerRoot.Connections.mainViewController.onCurrentFileChanged - currentFile: " + mainViewController.currentFile);
-
             // Set Source
-            viewerImage.source = "file://" + mainViewController.currentFile;
-
+            //viewerImage.source = "file://" + mainViewController.currentFile;
             // Show Status Text
             viewerViewController.showStatusText(mainViewController.currentFile, Const.defaultStatusTextDisplayTimeout);
         }
-
-        // On Current File Updated
-        onCurrentFileUdated: {
-            //console.log("viewerRoot.Connections.mainViewController.onCurrentFileUpdated");
-            // Set Update Flag
-            viewerRoot.updateFlag = true;
-            // Reset Preview Image
-            viewerImage.source = "";
-        }
-
-        // On File Updated
-        onFileUpdated: {
-            //console.log("viewerRoot.Connections.mainViewController.onFileUpdated - aIndex: " + aIndex);
-            // Check Index
-            if (aIndex === mainViewController.currentIndex) {
-                // Set Update Flag
-                viewerRoot.updateFlag = true;
-                // Reset Preview Image
-                viewerImage.source = "";
-            }
-        }
     }
 
-    focus: true
 
     // Viewer Image
-    Image {
+    AnimatedImage {
         id: viewerImage
         anchors.fill: parent
         anchors.margins: Const.defaultThumbMargins
         fillMode: Image.PreserveAspectFit
-        cache: false
         asynchronous: true
         visible: opacity > 0.0
         opacity: viewerImage.status === Image.Ready ? 1.0 : 0.0
-        Behavior on opacity {
-            NumberAnimation {
-                duration: 200
-            }
-        }
+        Behavior on opacity { NumberAnimation { duration: 200 } }
 
         source: "file://" + mainViewController.currentFile
 
-        // Mouse Area
-        MouseArea {
-            id: viewerMouseArea
-            anchors.fill: parent
-            // On Double Click
-            onDoubleClicked: {
-                // Toggle Viewer FullScreen
-                mainViewController.toggleViewerFullScreen();
-            }
-            // On Wheel
-            onWheel: {
-                //console.log("viewerMouseArea.onWheel - wheel: " + wheel.angleDelta.y);
-                // Check Angle Delta
-                if (wheel.angleDelta.y < 0) {
-                    // Next Image
-                    mainViewController.nextImage();
-                } else {
-                    // Prev Image
-                    mainViewController.prevImage();
-                }
-
-                // ...
-            }
-        }
+        //playing: true
 
         // On Status Changed
         onStatusChanged: {
+/*
             // Check Status
             if (viewerImage.status === Image.Null && viewerRoot.updateFlag) {
                 //console.log("viewerImage.onStatusChanged - status: " + previewImage.status);
@@ -178,6 +118,37 @@ Rectangle {
                 // Set Source
                 viewerImage.source = "file://" + mainViewController.currentFile;
             }
+*/
+            // Check Status & Frame Count
+            if (viewerImage.status === Image.Ready && viewerImage.frameCount > 1) {
+                // Start Playing
+                viewerImage.playing = true;
+            }
+        }
+    }
+
+    // Mouse Area
+    MouseArea {
+        id: viewerMouseArea
+        anchors.fill: viewerImage
+        // On Double Click
+        onDoubleClicked: {
+            // Toggle Viewer FullScreen
+            mainViewController.toggleViewerFullScreen();
+        }
+        // On Wheel
+        onWheel: {
+            //console.log("viewerMouseArea.onWheel - wheel: " + wheel.angleDelta.y);
+            // Check Angle Delta
+            if (wheel.angleDelta.y < 0) {
+                // Next Image
+                mainViewController.nextImage();
+            } else {
+                // Prev Image
+                mainViewController.prevImage();
+            }
+
+            // ...
         }
     }
 
@@ -191,12 +162,7 @@ Rectangle {
         color: Const.defaultFontColor
         visible: opacity > 0.0
         opacity: viewerImage.status !== Image.Ready ? 1.0 : 0.0
-        Behavior on opacity {
-            NumberAnimation {
-                duration: 200
-            }
-        }
-
+        Behavior on opacity { NumberAnimation { duration: 200 } }
         text: "Loading..."
     }
 

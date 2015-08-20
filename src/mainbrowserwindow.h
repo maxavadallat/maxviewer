@@ -48,6 +48,7 @@ class MainBrowserWindow : public QMainWindow
     Q_PROPERTY(int slideShowDirection READ getSlideShowDirection WRITE setSlideShowDirection NOTIFY slideShowDirectionChanged)
     Q_PROPERTY(int slideShowDelay READ getSlideShowDelay WRITE setSlideShowDelay NOTIFY slideShowDelayChanged)
     Q_PROPERTY(bool slideShowWrap READ getSlideShowWrap WRITE setSlideShowWrap NOTIFY slideShowWrapChanged)
+    Q_PROPERTY(bool slideShowActive READ getSlideShowActive NOTIFY slideShowActiveChanged)
 
 public:
 
@@ -107,6 +108,9 @@ public:
     void setSlideShowWrap(const bool& aWrapAround);
     // Get Slide Show Wrap Around
     bool getSlideShowWrap();
+
+    // Get Slide Show Active
+    bool getSlideShowActive();
 
 protected:
 
@@ -264,6 +268,9 @@ signals:
 
     // Operate Worker Signal
     void operateWorker(const int& aOperation);
+
+    // Slide Show Active Changed Signal
+    void slideShowActiveChanged(const bool& aActive);
 
 private slots:
 

@@ -1510,6 +1510,9 @@ void MainBrowserWindow::startSlideShow()
         QSettings settings;
         // Start Timer
         slideShowTimerID = startTimer(settings.value(SETTINGS_KEY_SLIDE_SHOW_DELAY).toInt());
+
+        // Emit Slide Show Active Changed Signal
+        emit slideShowActiveChanged(true);
     }
 }
 
@@ -1526,6 +1529,9 @@ void MainBrowserWindow::stopSlideShow()
         killTimer(slideShowTimerID);
         // Reset Slide Show Timer ID
         slideShowTimerID = -1;
+
+        // Emit Slide Show Active Changed Signal
+        emit slideShowActiveChanged(false);
     }
 }
 
@@ -2481,6 +2487,9 @@ void MainBrowserWindow::nextImage()
     if (currentIndex < browserDataModel.count()-1) {
         // Inc Current Index
         setCurrentIndex(currentIndex + 1);
+    } else if (slideShowWrap) {
+        // Set Current Index
+        setCurrentIndex(0);
     }
 }
 
@@ -2493,6 +2502,9 @@ void MainBrowserWindow::prevImage()
     if (currentIndex > 0) {
         // Dec Current Index
         setCurrentIndex(currentIndex - 1);
+    } else if (slideShowWrap) {
+        // Set Current Index
+        setCurrentIndex(browserDataModel.count()-1);
     }
 }
 
@@ -2814,6 +2826,14 @@ void MainBrowserWindow::setSlideShowWrap(const bool& aWrapAround)
 bool MainBrowserWindow::getSlideShowWrap()
 {
     return slideShowWrap;
+}
+
+//==============================================================================
+// Get Slide Show Active
+//==============================================================================
+bool MainBrowserWindow::getSlideShowActive()
+{
+    return slideShowTimerID != -1;
 }
 
 //==============================================================================

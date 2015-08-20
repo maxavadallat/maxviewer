@@ -134,11 +134,7 @@ Rectangle {
                 anchors.right: parent.right
                 opacity: fileSelected ? 1.0 : 0.0
                 visible: opacity > 0.0
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: 100
-                    }
-                }
+                Behavior on opacity { NumberAnimation { duration: 100 } }
                 source: "resources/images/checkbox_checked.png"
             }
 
@@ -152,11 +148,7 @@ Rectangle {
                 color: Const.defaultFontColor
                 visible: opacity > 0.0
                 opacity: thumbImage.status !== Image.Ready ? 1.0 : 0.0
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: 200
-                    }
-                }
+                Behavior on opacity { NumberAnimation { duration: 200 } }
 
                 text: thumbImage.status === Image.Error ? "Error." : "Loading..."
             }
@@ -318,7 +310,7 @@ Rectangle {
                 onFileUpdated: {
                     // Check Index
                     if (index === aIndex) {
-                        console.log("browserGrid.delegate.onFileUpdated - aIndex: " + aIndex);
+                        //console.log("browserGrid.delegate.onFileUpdated - aIndex: " + aIndex);
                         // Reset Thumbnail Source
                         thumbImage.source = "";
 
@@ -629,7 +621,7 @@ Rectangle {
 
     // On Hover Index Changed
     onHoverIndexChanged: {
-        console.log("browserGridRoot.onHoverIndexChanged - hoverIndex: " + hoverIndex);
+        //console.log("browserGridRoot.onHoverIndexChanged - hoverIndex: " + hoverIndex);
 
         // ...
     }
@@ -846,7 +838,7 @@ Rectangle {
                 break;
 
                 case Qt.Key_PageUp: {
-                    console.log("browserGridRoot.Key.onReleased - PAGEUP");
+                    //console.log("browserGridRoot.Key.onReleased - PAGEUP");
                     // Calculate Visible Rows Count
                     var visibleRowCount = Math.floor(browserGrid.height / mainViewController.thumbsHeight);
                     // Loop
@@ -861,7 +853,7 @@ Rectangle {
                 } break;
 
                 case Qt.Key_PageDown: {
-                    console.log("browserGridRoot.Key.onReleased - PAGEDOWN");
+                    //console.log("browserGridRoot.Key.onReleased - PAGEDOWN");
 
                     // Calculate Visible Rows Count
                     var visibleRowCount = Math.floor(browserGrid.height / mainViewController.thumbsHeight);
@@ -877,8 +869,6 @@ Rectangle {
                 } break;
             }
         }
-
-        // ...
     }
 
     // On Key Released
@@ -923,7 +913,7 @@ Rectangle {
             // Switch Key
             switch (event.key) {
                 case Qt.Key_Home:
-                    console.log("browserGridRoot.Key.onReleased - HOME");
+                    //console.log("browserGridRoot.Key.onReleased - HOME");
                     // Set Current Index
                     browserGrid.currentIndex = 0;
                     // Position View
@@ -931,7 +921,7 @@ Rectangle {
                 break;
 
                 case Qt.Key_End:
-                    console.log("browserGridRoot.Key.onReleased - END");
+                    //console.log("browserGridRoot.Key.onReleased - END");
                     // Set Current Index
                     browserGrid.currentIndex = browserGrid.count - 1;
                     // Position View
@@ -939,7 +929,7 @@ Rectangle {
                 break;
 
                 case Qt.Key_PageUp: {
-                    console.log("browserGridRoot.Key.onReleased - PAGEUP");
+                    //console.log("browserGridRoot.Key.onReleased - PAGEUP");
                     // Calculate Visible Rows Count
                     var visibleRowCount = Math.floor(browserGrid.height / mainViewController.thumbsHeight);
                     // Loop
@@ -954,7 +944,7 @@ Rectangle {
                 } break;
 
                 case Qt.Key_PageDown: {
-                    console.log("browserGridRoot.Key.onReleased - PAGEDOWN");
+                    //console.log("browserGridRoot.Key.onReleased - PAGEDOWN");
 
                     // Calculate Visible Rows Count
                     var visibleRowCount = Math.floor(browserGrid.height / mainViewController.thumbsHeight);
@@ -972,10 +962,7 @@ Rectangle {
                 default:
                 break;
             }
-
         }
-
-        // ...
     }
 
     // Connections
@@ -1055,7 +1042,7 @@ Rectangle {
 
             // Check Button
             if (aButton === Qt.RightButton && browserGridRoot.delegateHasPointer && browserGridRoot.hoverIndex != -1) {
-                console.log("browserGridRoot.Connections.mainViewController.onBrowserMouseReleased - pos:[" + aPosX + ":" + aPosY + "] - aButton: " + aButton + " - hoverIndex: " + browserGridRoot.hoverIndex);
+                //console.log("browserGridRoot.Connections.mainViewController.onBrowserMouseReleased - pos:[" + aPosX + ":" + aPosY + "] - aButton: " + aButton + " - hoverIndex: " + browserGridRoot.hoverIndex);
 
                 // Set Popup Index
                 mainViewController.popupIndex = browserGridRoot.hoverIndex;

@@ -5,7 +5,10 @@
 #include <QFileInfoList>
 #include <QQmlContext>
 #include <QMutexLocker>
+#include <QModelIndex>
 #include <QSettings>
+
+#include <CoreServices/CoreServices.h>
 
 #include "mainbrowserwindow.h"
 #include "mainviewerwindow.h"
@@ -111,7 +114,7 @@ MainBrowserWindow::MainBrowserWindow(QWidget* aParent)
     setupPreview();
 
     // Restore UI
-    restoreUI();
+    //restoreUI();
 
     // ...
 }
@@ -132,7 +135,7 @@ void MainBrowserWindow::setupTreeView()
     // Set File System Model Root Path
     fsModel->setRootPath(QDir::rootPath());
     // Set Filter to Show Only Dirs
-    fsModel->setFilter(/*QDir::System |*/ /*QDir::Hidden |*/ QDir::Drives | QDir::AllDirs | QDir::NoDotAndDotDot);
+    fsModel->setFilter(QDir::Drives | QDir::AllDirs | QDir::NoDotAndDotDot);
 
     // Set TreeView Model
     ui->fileSystemTreeView->setModel(fsModel);
@@ -1542,16 +1545,6 @@ void MainBrowserWindow::registerAppForImages()
 {
     qDebug() << "MainBrowserWindow::registerAppForImages";
 
-/*
-    defaults write com.apple.LaunchServices LSHandlers -array-add "<dict><key>LSHandlerContentTag</key><string>jpg</string><key>LSHandlerContentTagClass</key><string>public.filename-extension</string><key>LSHandlerRoleAll</key><string>com.yourcompany.MaxViewer</string></dict>"
-    defaults write com.apple.LaunchServices LSHandlers -array-add "<dict><key>LSHandlerContentTag</key><string>jpeg</string><key>LSHandlerContentTagClass</key><string>public.filename-extension</string><key>LSHandlerRoleAll</key><string>com.yourcompany.MaxViewer</string></dict>"
-    defaults write com.apple.LaunchServices LSHandlers -array-add "<dict><key>LSHandlerContentTag</key><string>gif</string><key>LSHandlerContentTagClass</key><string>public.filename-extension</string><key>LSHandlerRoleAll</key><string>com.yourcompany.MaxViewer</string></dict>"
-    defaults write com.apple.LaunchServices LSHandlers -array-add "<dict><key>LSHandlerContentTag</key><string>png</string><key>LSHandlerContentTagClass</key><string>public.filename-extension</string><key>LSHandlerRoleAll</key><string>com.yourcompany.MaxViewer</string></dict>"
-    defaults write com.apple.LaunchServices LSHandlers -array-add "<dict><key>LSHandlerContentTag</key><string>bmp</string><key>LSHandlerContentTagClass</key><string>public.filename-extension</string><key>LSHandlerRoleAll</key><string>com.yourcompany.MaxViewer</string></dict>"
-
-    /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister -kill -domain local-domain system -domain user
-*/
-
     // Init Defaults Command %1 is extension eg.: jpg, %2 is app name eg.: com.yourcompany.MaxViewer
     QString defaultsCommand = QString("defaults write com.apple.LaunchServices LSHandlers -array-add \"<dict><key>LSHandlerContentTag</key><string>%1</string><key>LSHandlerContentTagClass</key><string>public.filename-extension</string><key>LSHandlerRoleAll</key><string>%2</string></dict>\"");
 
@@ -1574,8 +1567,6 @@ void MainBrowserWindow::registerAppForImages()
 
     // Restart Finder Service
     result = system(lsregisterCommand.toStdString().c_str());
-
-    // ...
 }
 
 //==============================================================================
@@ -2438,6 +2429,9 @@ void MainBrowserWindow::toggleSlideShow()
 //==============================================================================
 void MainBrowserWindow::showWindow()
 {
+    // Restore UI
+    restoreUI();
+
     qDebug() << "MainBrowserWindow::showWindow";
 
     // Init Settings
@@ -2458,6 +2452,8 @@ void MainBrowserWindow::showWindow()
     // Init Root Model Index
     QModelIndex modelIndex = fsModel->index(currentDir);
 
+    // Expand Parent
+    ui->fileSystemTreeView->expand(modelIndex.parent());
     // Expand
     ui->fileSystemTreeView->expand(modelIndex);
     // Set Current Index
@@ -3363,7 +3359,7 @@ void MainBrowserWindow::timerEvent(QTimerEvent* aEvent)
     if (aEvent) {
         // Check Timer ID
         if (aEvent->timerId() == slideShowTimerID) {
-            qDebug() << "MainBrowserWindow::timerEvent - slideShowTimerID";
+            //qDebug() << "MainBrowserWindow::timerEvent - slideShowTimerID";
             // Get Browser Data Model Count
             int bdmCount = browserDataModel.count();
             // Init Next Index
@@ -3403,6 +3399,9 @@ void MainBrowserWindow::timerEvent(QTimerEvent* aEvent)
 
             // Set Current Index
             setCurrentIndex(nextIndex);
+
+            // Update System Activity to Disable Screen Saver
+            UpdateSystemActivity(OverallAct);
         }
     }
 }

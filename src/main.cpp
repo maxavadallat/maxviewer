@@ -1,18 +1,11 @@
-//#include <QApplication>
-//#include <QEvent>
-//#include <QFileOpenEvent>
-//#include <QFile>
-//#include <QString>
+
 #include <QDebug>
+
 
 #include "myapp.h"
 #include "mainbrowserwindow.h"
 #include "mainviewerwindow.h"
 #include "constants.h"
-
-// Open File Argument
-//static QString openFileArgument = QString("");
-
 
 
 //==============================================================================
@@ -20,8 +13,13 @@
 //==============================================================================
 int main(int argc, char* argv[])
 {
+    qDebug() << " ";
+    qDebug() << "================================================================================";
+    qDebug() << " Starting Max Viewer...";
+    qDebug() << "================================================================================";
+    qDebug() << " ";
+
     // Init Application
-    //QApplication app(argc, argv);
     MyApplication app(argc, argv);
 
     // Set Application Name
@@ -45,8 +43,6 @@ int main(int argc, char* argv[])
     // Show Browser Window
     browserWindow->showWindow();
 
-    // ...
-
     // Execute App
     int result = app.exec();
 
@@ -56,20 +52,13 @@ int main(int argc, char* argv[])
     // Release Browser Window Instance
     browserWindow->release();
 
+    qDebug() << " ";
+    qDebug() << "================================================================================";
+    qDebug() << " Exiting Max Viewer...";
+    qDebug() << "================================================================================";
+    qDebug() << " ";
+
     return result;
 }
 
 
-/*
-
-defaults write com.apple.LaunchServices LSHandlers -array-add "<dict><key>LSHandlerContentTag</key><string>jpg</string><key>LSHandlerContentTagClass</key><string>public.filename-extension</string><key>LSHandlerRoleAll</key><string>com.yourcompany.MaxViewer</string></dict>"
-defaults write com.apple.LaunchServices LSHandlers -array-add "<dict><key>LSHandlerContentTag</key><string>jpeg</string><key>LSHandlerContentTagClass</key><string>public.filename-extension</string><key>LSHandlerRoleAll</key><string>com.yourcompany.MaxViewer</string></dict>"
-defaults write com.apple.LaunchServices LSHandlers -array-add "<dict><key>LSHandlerContentTag</key><string>gif</string><key>LSHandlerContentTagClass</key><string>public.filename-extension</string><key>LSHandlerRoleAll</key><string>com.yourcompany.MaxViewer</string></dict>"
-defaults write com.apple.LaunchServices LSHandlers -array-add "<dict><key>LSHandlerContentTag</key><string>png</string><key>LSHandlerContentTagClass</key><string>public.filename-extension</string><key>LSHandlerRoleAll</key><string>com.yourcompany.MaxViewer</string></dict>"
-defaults write com.apple.LaunchServices LSHandlers -array-add "<dict><key>LSHandlerContentTag</key><string>bmp</string><key>LSHandlerContentTagClass</key><string>public.filename-extension</string><key>LSHandlerRoleAll</key><string>com.yourcompany.MaxViewer</string></dict>"
-
-/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister -f /Applications/MaxViewer.app/
-
-/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister -kill -domain local -domain system -domain user
-
-*/

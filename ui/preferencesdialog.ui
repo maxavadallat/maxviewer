@@ -89,7 +89,7 @@
         <string/>
        </property>
        <property name="pixmap">
-        <pixmap resource="maxviewer.qrc">:/resources/icons/main_icon_128x128.png</pixmap>
+        <pixmap>:/resources/icons/main_icon_128x128.png</pixmap>
        </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>
@@ -255,16 +255,16 @@
       <item>
        <widget class="QSlider" name="slideShowDelaySlider">
         <property name="minimum">
-         <number>1000</number>
+         <number>500</number>
         </property>
         <property name="maximum">
          <number>10000</number>
         </property>
         <property name="singleStep">
-         <number>1000</number>
+         <number>500</number>
         </property>
         <property name="pageStep">
-         <number>1000</number>
+         <number>500</number>
         </property>
         <property name="value">
          <number>3000</number>
@@ -279,7 +279,7 @@
          <enum>QSlider::TicksBelow</enum>
         </property>
         <property name="tickInterval">
-         <number>1000</number>
+         <number>500</number>
         </property>
        </widget>
       </item>
@@ -322,9 +322,7 @@
    </property>
   </widget>
  </widget>
- <resources>
-  <include location="maxviewer.qrc"/>
- </resources>
+ <resources/>
  <connections>
   <connection>
    <sender>buttonBox</sender>

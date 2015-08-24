@@ -189,7 +189,7 @@ void PreferencesDialog::saveSettings()
 void PreferencesDialog::on_slideShowDelaySlider_valueChanged(int aValue)
 {
     // Set Slide Show Delay Value Label
-    ui->slideShowDelayValueLabel->setText(QString("%1 secs").arg(aValue / 1000));
+    ui->slideShowDelayValueLabel->setText(QString("%1 secs").arg((double)aValue / 1000, 2, 'f', 1));
 }
 
 //==============================================================================

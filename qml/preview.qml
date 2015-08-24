@@ -14,7 +14,8 @@ Rectangle {
     property string fileInfo: previewImage.sourceSize.width + "x" + previewImage.sourceSize.height + " size: " + mainViewController.getFileSize(mainViewController.currentFile)
 
     // Preview Image
-    Image {
+    //Image {
+    AnimatedImage {
         id: previewImage
         anchors.fill: parent
         fillMode: Image.PreserveAspectFit
@@ -36,7 +37,7 @@ Rectangle {
                 // Reset Update Flag
                 previewRoot.updateFlag = false;
                 // Set Source
-                previewImage.source = "file://" + mainViewController.currentFile;
+                //previewImage.source = "file://" + mainViewController.currentFile;
                 // Reset File Info
                 //previewRoot.fileInfo = "";
 
